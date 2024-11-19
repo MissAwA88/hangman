@@ -5,6 +5,7 @@ const rl = readlinePromises.createInterface({ input: process.stdin, output: proc
 //#endregion
 
 import { HANGMAN_UI } from './graphics.mjs';
+import { START_SCREEN } from './splashscreen.mjs';
 import { GREEN, RED, WHITE, RESET } from './colors.mjs';
 import dictionary from './dictionary.mjs';
 
@@ -12,24 +13,48 @@ const word = getRandomWord();
 let guessedWord = createGuessList(word.length);
 let wrongGuesses = [];
 let isGameOver = false;
-let
+let guesses = 0;
+let hangmanLanguage = dictionary.en;
+
+
+console.clear();
+const START_GAME = START_SCREEN;
+print(START_GAME.toString());
+await rl.question("Press ENTER to play!");
+
+let selectLanguage = await rl.question(hangmanLanguage.selectLanguage);
+
+if (selectLanguage == 'NO'){
+    hangmanLanguage = dictionary.no;
+}
+
 do {
 
     updateUI();
-
+    
     // Gjette en bokstav || ord.  (|| betyr eller).
-    let guess = (await rl.question(dictionary.guessPrompt)).toLowerCase();
+    let guess = (await rl.question(hangmanLanguage.guessPrompt)).toLowerCase();
+    
+    guesses++;
 
     if (isWordGuessed(word, guess)) {
-        print(dictionary.winCelibration, GREEN);
+        print(hangmanLanguage.winCelebration, GREEN);
         isGameOver = true;
     }
-    else if (word.includes(guess)) {
+    else if (word.includes(guess) && (wrongGuesses.includes(guess) == false)) {
 
         uppdateGuessedWord(guess);
 
         if (isWordGuessed(word, guessedWord)) {
+            
+            updateUI()
+            
             print("Hurra du gjettet ordet", GREEN);
+            // hangmanlanguage.winCelebration istede for " hurra"
+           
+           let replayAnswer = (await rl.question)
+
+
             isGameOver = true;
         }
     } else {
@@ -87,14 +112,14 @@ function updateUI() {
     print(guessedWord.join(""), GREEN);
     print(HANGMAN_UI[wrongGuesses.length]);
     if (wrongGuesses.length > 0) {
-        print(dictionary.wrongGuesses + RED + wrongGuesses.join() + RESET);
+        print(hangmanLanguage.wrongGuesses + RED + wrongGuesses.join() + RESET);
     }
 }
 
 function getRandomWord() {
 
     const words = ["Kiwi", "Car", "Dog", "etwas"];
-    let index = Math.floor(Math.random() * words.length - 1);
+    let index = Math.floor(Math.random() * words.length );
     return words[index].toLowerCase();
 
 }
