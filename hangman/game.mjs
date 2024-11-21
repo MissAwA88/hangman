@@ -9,11 +9,11 @@ import { START_SCREEN } from './splashscreen.mjs';
 import { GREEN, RED, WHITE, RESET } from './colors.mjs';
 import dictionary from './dictionary.mjs';
 
-const word = getRandomWord();
+let word = getRandomWord();
 let guessedWord = createGuessList(word.length);
 let wrongGuesses = [];
 let isGameOver = false;
-let guesses = 0;
+
 let hangmanLanguage = dictionary.en;
 
 
@@ -28,51 +28,81 @@ if (selectLanguage == 'NO'){
     hangmanLanguage = dictionary.no;
 }
 
-do {
+playGame();
 
-    updateUI();
+async function playGame(){
+    word = getRandomWord();
+    guessedWord = createGuessList(word.length);
+    wrongGuesses = [];
+    isGameOver = false;
+    let guesses = 0;
+
+    do {
+
+        updateUI();
+        
+        // Gjette en bokstav || ord.  (|| betyr eller).
+        let guess = (await rl.question(hangmanLanguage.guessPrompt)).toLowerCase();
+        
+        guesses++;
     
-    // Gjette en bokstav || ord.  (|| betyr eller).
-    let guess = (await rl.question(hangmanLanguage.guessPrompt)).toLowerCase();
-    
-    guesses++;
-
-    if (isWordGuessed(word, guess)) {
-        print(hangmanLanguage.winCelebration, GREEN);
-        isGameOver = true;
-    }
-    else if (word.includes(guess) && (wrongGuesses.includes(guess) == false)) {
-
-        uppdateGuessedWord(guess);
-
-        if (isWordGuessed(word, guessedWord)) {
-            
-            updateUI()
-            
-            print("Hurra du gjettet ordet", GREEN);
-            // hangmanlanguage.winCelebration istede for " hurra"
-           
-           let replayAnswer = (await rl.question)
-
-
+        if (isWordGuessed(word, guess)) {
+            print(hangmanLanguage.winCelebration, GREEN);
             isGameOver = true;
         }
-    } else {
-        print(" DU TAR FEIL !!!!!!!", RED);
-        wrongGuesses.push(guess);
-
-        if (wrongGuesses.length >= HANGMAN_UI.length - 1) {
-            isGameOver = true;
-            print("Du har daua", RED);
+        else if (word.includes(guess) && (wrongGuesses.includes(guess) == false)) {
+    
+            uppdateGuessedWord(guess);
+    
+            if (isWordGuessed(word, guessedWord)) {
+                
+                updateUI()
+                
+                print("Hurra du gjettet ordet", GREEN);
+                print(`Du gjettet ${guesses} ganger`);
+                // hangmanlanguage.winCelebration istede for " hurra"
+               
+               let replayAnswer = (await rl.question)
+    
+    
+                isGameOver = true;
+            }
+        } else if(wrongGuesses.includes(guess) == false) {
+            
+            print(" DU TAR FEIL !!!!!!!", RED);
+            wrongGuesses.push(guess);
+    
+            if (wrongGuesses.length >= HANGMAN_UI.length - 1) {
+                isGameOver = true;
+                updateUI();
+                print("Du har daua", RED);
+                print(`Du gjettet ${guesses} ganger`);
+            }
+    
         }
+    
+        // Har du lyst å spille igjen?
+    
+    } while (isGameOver == false)
 
+        ReplayQuestion();
+}
+
+
+async function ReplayQuestion(){
+    print(hangmanLanguage.replay);
+    let replay = await rl.question("");
+
+    if(replay == "n"){
+        //gameRun = false;
+        process.exit();
+    }else{
+        playGame();
     }
 
-    // Har du lyst å spille igjen?
+}
 
-} while (isGameOver == false)
 
-process.exit();
 
 function uppdateGuessedWord(guess) {
     for (let i = 0; i < word.length; i++) {
